@@ -1,0 +1,21 @@
+{
+  "name": "asistencia-javier-heraud-perez",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistema de registro de asistencia con código QR para la I.E. Javier Heraud Pérez",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "asistencia",
+    "qr",
+    "supabase",
+    "colegio"
+  ],
+  "license": "MIT"
+}

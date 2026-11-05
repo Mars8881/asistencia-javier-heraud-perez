@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sistema de registro de asistencia con código QR de la I.E. Javier Heraud Pérez">
+  <title>Asistencia QR | I.E. Javier Heraud Pérez</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- ============ BARRA SUPERIOR ============ -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-logo">JHP</div>
+      <div class="brand-text">
+        <h1>I.E. Javier Heraud Pérez</h1>
+        <p>Sistema de Registro de Asistencia</p>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span id="modeBadge" class="mode-badge">Demo local</span>
+      <span id="headerUser" class="header-user hidden"></span>
+      <button id="logoutBtn" type="button" class="btn btn-ghost btn-sm hidden">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <!-- ============ VISTA: LOGIN ============ -->
+  <main id="view-login" class="view active">
+    <section class="hero">
+      <span class="hero-tag">Año escolar 2026</span>
+      <h2>Registro de asistencia con código QR</h2>
+      <p>Seleccione su rol e ingrese sus datos para comenzar.</p>
+    </section>
+
+    <section class="login-wrap">
+      <div class="role-grid">
+        <button type="button" class="role-card" data-role="docente">
+          <span class="role-icon role-icon-docente">👨‍🏫</span>
+          <span class="role-title">Docente</span>
+          <span class="role-desc">Cree sesiones de clase y comparta el código QR con sus estudiantes.</span>
+        </button>
+
+        <button type="button" class="role-card" data-role="estudiante">
+          <span class="role-icon role-icon-estudiante">🎓</span>
+          <span class="role-title">Estudiante</span>
+          <span class="role-desc">Registre su asistencia escaneando el QR o ingresando el código.</span>
+        </button>
+      </div>
+
+      <form id="loginForm" class="card login-card hidden" autocomplete="off">
+        <h3 id="loginTitle">Ingrese sus datos</h3>
+
+        <div class="field">
+          <label for="loginName">Nombre completo</label>
+          <input id="loginName" type="text" placeholder="Ej: María Pérez Gonzales" maxlength="80" required>
+        </div>
+
+        <div class="field cloud-only hidden" id="loginEmailField">
+          <label for="loginEmail">Correo electrónico</label>
+          <input id="loginEmail" type="email" placeholder="Ej: docente@jheraud.edu.pe" maxlength="120" autocomplete="email">
+        </div>
+
+        <div class="field cloud-only hidden" id="loginPasswordField">
+          <label for="loginPassword">Contraseña</label>
+          <input id="loginPassword" type="password" placeholder="Mínimo 6 caracteres" minlength="6" autocomplete="current-password">
+        </div>
+
+        <div class="field" id="loginCodeField">
+          <label for="loginCode">Código institucional <span class="optional">(opcional)</span></label>
+          <input id="loginCode" type="text" placeholder="Ej: DOC-2026" maxlength="30">
+        </div>
+
+        <button id="loginSubmitBtn" type="submit" class="btn btn-primary btn-block">Ingresar al sistema</button>
+        <p id="loginHint" class="hint">Acceso de demostración. La autenticación segura con correo y contraseña se activa al conectar Supabase.</p>
+      </form>
+    </section>
+  </main>
+
+  <!-- ============ VISTA: DOCENTE ============ -->
+  <main id="view-docente" class="view">
+    <div class="page-head">
+      <div>
+        <h2>Panel del docente</h2>
+        <p id="docWelcome" class="muted">Bienvenido</p>
+      </div>
+      <div class="page-actions">
+        <button id="resetDemoBtn" type="button" class="btn btn-ghost btn-sm">Reiniciar demo</button>
+        <button id="newSessionBtn" type="button" class="btn btn-primary">＋ Nueva sesión</button>
+      </div>
+    </div>
+
+    <section class="stats">
+      <article class="stat-card">
+        <span class="stat-label">Sesiones activas</span>
+        <strong class="stat-value" id="docStatSessions">0</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Asistencias totales</span>
+        <strong class="stat-value" id="docStatAttendance">0</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Registros de hoy</span>
+        <strong class="stat-value" id="docStatToday">0</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Estudiantes únicos</span>
+        <strong class="stat-value" id="docStatStudents">0</strong>
+      </article>
+    </section>
+
+    <div class="grid-2">
+      <section class="card">
+        <div class="card-head">
+          <h3>Sesiones de clase</h3>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="sessionsTable">
+            <thead>
+              <tr>
+                <th>Materia</th>
+                <th>Grado</th>
+                <th>Código</th>
+                <th>Asistentes</th>
+                <th>Estado</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p id="sessionsEmpty" class="empty">Aún no creó sesiones. Presione “Nueva sesión” para generar su primer código QR.</p>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h3>Asistencias registradas</h3>
+          <select id="attendanceFilter" class="select" aria-label="Filtrar por sesión">
+            <option value="">Todas las sesiones</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="attendanceTable">
+            <thead>
+              <tr>
+                <th>Estudiante</th>
+                <th>Sesión</th>
+                <th>Fecha y hora</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p id="attendanceEmpty" class="empty">Todavía no hay asistencias registradas.</p>
+      </section>
+    </div>
+  </main>
+
+  <!-- ============ VISTA: ESTUDIANTE ============ -->
+  <main id="view-estudiante" class="view">
+    <div class="page-head">
+      <div>
+        <h2>Panel del estudiante</h2>
+        <p id="estWelcome" class="muted">Bienvenido</p>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <section class="card register-card">
+        <h3>Registrar asistencia</h3>
+        <p class="muted">Escanee el QR de la clase con su celular o ingrese el código que le compartió su docente.</p>
+
+        <div id="detectedBanner" class="banner hidden"></div>
+
+        <form id="registerForm" autocomplete="off">
+          <div class="field">
+            <label for="sessionCodeInput">Código de sesión</label>
+            <input id="sessionCodeInput" type="text" placeholder="Ej: JHP-AB12CD" maxlength="20" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Registrar mi asistencia</button>
+        </form>
+
+        <div id="registerResult" class="register-result hidden"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h3>Mi historial</h3>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="studentHistoryTable">
+            <thead>
+              <tr>
+                <th>Materia</th>
+                <th>Grado</th>
+                <th>Fecha y hora</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p id="historyEmpty" class="empty">Aún no tiene asistencias registradas.</p>
+      </section>
+    </div>
+
+    <section class="stats stats-spaced">
+      <article class="stat-card">
+        <span class="stat-label">Mis asistencias</span>
+        <strong class="stat-value" id="estStatTotal">0</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Cursos distintos</span>
+        <strong class="stat-value" id="estStatSubjects">0</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Registros de hoy</span>
+        <strong class="stat-value" id="estStatToday">0</strong>
+      </article>
+    </section>
+  </main>
+
+  <!-- ============ MODAL: NUEVA SESIÓN ============ -->
+  <div id="sessionModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="sessionModalTitle">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="sessionModalTitle">Nueva sesión de clase</h3>
+        <button id="closeSessionModal" type="button" class="icon-btn" aria-label="Cerrar">✕</button>
+      </div>
+
+      <form id="sessionForm" autocomplete="off">
+        <div class="field">
+          <label for="sessionSubject">Materia o curso</label>
+          <input id="sessionSubject" type="text" placeholder="Ej: Matemática" maxlength="60" required>
+        </div>
+        <div class="two-cols">
+          <div class="field">
+            <label for="sessionGrade">Grado</label>
+            <input id="sessionGrade" type="text" placeholder="Ej: 1°" maxlength="20" required>
+          </div>
+          <div class="field">
+            <label for="sessionSection">Sección</label>
+            <input id="sessionSection" type="text" placeholder="Ej: A" maxlength="10">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Generar sesión y QR</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: CÓDIGO QR ============ -->
+  <div id="qrModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="qrTitle">
+    <div class="modal-card qr-card">
+      <div class="modal-head">
+        <h3 id="qrTitle">Código QR de la sesión</h3>
+        <button id="closeQrModal" type="button" class="icon-btn" aria-label="Cerrar">✕</button>
+      </div>
+
+      <p id="qrSubtitle" class="muted qr-subtitle"></p>
+
+      <div id="qrContainer" class="qr-container" aria-label="Código QR de la sesión"></div>
+
+      <div class="code-row">
+        <code id="qrCodeText" class="code-pill code-large">JHP-XXXX</code>
+        <button id="copyCodeBtn" type="button" class="btn btn-ghost btn-sm">Copiar</button>
+      </div>
+
+      <p class="hint">El estudiante puede escanear este QR o ingresar el código en su panel. El QR abre directamente el registro de asistencia.</p>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Librerías externas (con respaldo local si no hay internet) -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

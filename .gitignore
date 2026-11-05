@@ -1,0 +1,27 @@
+# Dependencias
+node_modules/
+npm-debug.log*
+
+# Entorno
+.env
+.env.local
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores
+.vscode/
+.idea/
+
+# Temporales
+*.tmp
+*.log
+
+# Proyecto anterior y archivos ajenos a este sistema
+SICAE/
+*.docx
+*.pdf
+node.zip
+nodejs_status.txt

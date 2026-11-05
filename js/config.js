@@ -20,9 +20,9 @@ window.JHP_CONFIG = {
   schoolYear: '2026',
 
   /* ---------- Conexión a Supabase ---------- */
-  supabaseUrl: '',        // Ej: 'https://abcdefgh.supabase.co'
-  supabaseAnonKey: '',    // Ej: 'eyJhbGciOiJIUzI1NiIs...'
-  useSupabase: false,     // Cambiar a true cuando estén completos
+  supabaseUrl: 'https://lubqvghkdzccakgxetkc.supabase.co',
+  supabaseAnonKey: 'sb_publishable_50NvrKd3Gu1rXzhLYK5ZaA_f43dH3pV',
+  useSupabase: true,
 
   /* ---------- Modo demostración ---------- */
   demoMode: true
